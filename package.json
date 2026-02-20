@@ -1,6 +1,6 @@
 {
   "name": "infographic-gen",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "AI-powered CLI tool to generate AntV Infographic SVGs from natural language prompts",
   "license": "MIT",
   "author": "Your Name <your.email@example.com>",
