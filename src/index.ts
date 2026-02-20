@@ -4,6 +4,7 @@ import { registerGenerateCommand } from "./commands/generate.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { t } from "./utils/i18n.js";
 
 // 从 package.json 中读取版本号
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -15,8 +16,8 @@ const program = new Command();
 
 program
   .name("infographic-gen")
-  .description("AI 驱动的信息图生成 CLI —— 输入自然语言，输出精美 SVG 信息图")
-  .version(VERSION, "-v, --version", "显示版本号");
+  .description(t("programDesc"))
+  .version(VERSION, "-v, --version", t("versionFlag"));
 
 // 注册子命令
 registerConfigCommand(program);

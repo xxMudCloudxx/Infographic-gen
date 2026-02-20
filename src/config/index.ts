@@ -18,6 +18,8 @@ interface ConfigSchema {
   baseUrl: string;
   provider: string;
   modelName: string;
+  defaultOutputDir: string;
+  locale: string;
 }
 
 /** 所有可配置的 key */
@@ -26,6 +28,8 @@ export const CONFIG_KEYS = [
   "baseUrl",
   "provider",
   "modelName",
+  "defaultOutputDir",
+  "locale",
 ] as const;
 export type ConfigKey = (typeof CONFIG_KEYS)[number];
 
@@ -35,6 +39,8 @@ export const CONFIG_LABELS: Record<ConfigKey, string> = {
   baseUrl: "Base URL",
   provider: "Provider",
   modelName: "Model Name",
+  defaultOutputDir: "Default Output Directory",
+  locale: "Language",
 };
 
 /** 默认值 */
@@ -43,6 +49,8 @@ const DEFAULTS: ConfigSchema = {
   baseUrl: "https://api.openai.com/v1",
   provider: "openai",
   modelName: "gpt-4o",
+  defaultOutputDir: ".",
+  locale: "en",
 };
 
 /**
@@ -85,6 +93,8 @@ export function getAllConfig(): Record<ConfigKey, string> {
     baseUrl: getConfig("baseUrl"),
     provider: getConfig("provider"),
     modelName: getConfig("modelName"),
+    defaultOutputDir: getConfig("defaultOutputDir"),
+    locale: getConfig("locale"),
   };
 }
 

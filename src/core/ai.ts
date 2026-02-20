@@ -6,6 +6,7 @@ import {
 } from "./prompts.js";
 import * as log from "../utils/logger.js";
 import { updateSpinner } from "../utils/spinner.js";
+import { t } from "../utils/i18n.js";
 
 /** LLM 请求返回的结果 */
 export interface LLMResult {
@@ -26,9 +27,7 @@ function createClient(): OpenAI {
   const { apiKey, baseUrl } = getLLMConfig();
 
   if (!apiKey) {
-    throw new Error(
-      "尚未配置 API Key。请先运行：infographic-gen config set apiKey <YOUR_KEY>",
-    );
+    throw new Error(t("apiKeyNotConfigured"));
   }
 
   return new OpenAI({
@@ -57,7 +56,7 @@ async function callLLM(
 
   const content = response.choices[0]?.message?.content;
   if (!content) {
-    throw new Error("LLM 返回了空内容");
+    throw new Error(t("llmEmptyContent"));
   }
 
   return cleanDSL(content);
@@ -126,12 +125,22 @@ export async function retryWithCorrection(
 ): Promise<string> {
   if (attempt > MAX_RETRIES) {
     throw new Error(
-      `已重试 ${MAX_RETRIES} 次仍然无法生成可渲染的信息图。最后一次错误：${errorMessage}`,
+      t("failedAfterRetries", {
+        retries: String(MAX_RETRIES),
+        error: errorMessage,
+      }),
     );
   }
 
-  updateSpinner(`AI 正在自我修正（第 ${attempt}/${MAX_RETRIES} 次）...`);
-  log.warn(`渲染失败，正在自动修正（第 ${attempt}/${MAX_RETRIES} 次）...`);
+  updateSpinner(
+    t("selfCorrecting", { attempt: String(attempt), max: String(MAX_RETRIES) }),
+  );
+  log.warn(
+    t("renderFailedRetrying", {
+      attempt: String(attempt),
+      max: String(MAX_RETRIES),
+    }),
+  );
 
   const client = createClient();
   const { modelName } = getLLMConfig();

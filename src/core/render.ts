@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { renderToString } from "@antv/infographic/ssr";
+import { getConfig } from "../config/index.js";
 
 /**
  * 渲染结果
@@ -50,16 +51,48 @@ export async function writeSVGFile(
 }
 
 /**
+ * 将 DSL 语法文本写入指定路径。
+ * 自动创建所需的中间目录。
+ *
+ * @param outputPath 输出文件路径
+ * @param dslContent DSL 语法字符串
+ */
+export async function writeDSLFile(
+  outputPath: string,
+  dslContent: string,
+): Promise<void> {
+  const absolutePath = path.resolve(outputPath);
+  const dir = path.dirname(absolutePath);
+
+  // 确保输出目录存在
+  await fs.mkdir(dir, { recursive: true });
+  await fs.writeFile(absolutePath, dslContent, "utf-8");
+}
+
+/**
  * 根据用户输入的输出路径，补全默认值。
- * 如果用户未指定，默认为当前目录下的 infographic-output.svg。
+ * 支持配置默认输出目录，如果用户未指定，默认为 defaultOutputDir 下的 infographic-output.svg。
+ *
+ * @param userOutput 用户指定的输出路径（可选）
+ * @returns 完整的输出路径（绝对路径或相对路径）
  */
 export function resolveOutputPath(userOutput?: string): string {
+  const defaultDir = getConfig("defaultOutputDir") || ".";
+
   if (userOutput) {
+    // 用户指定了输出路径
     // 确保扩展名是 .svg
-    if (!userOutput.endsWith(".svg")) {
-      return userOutput + ".svg";
+    const withExt = userOutput.endsWith(".svg")
+      ? userOutput
+      : userOutput + ".svg";
+
+    // 如果是绝对路径，直接返回；否则相对于默认目录
+    if (path.isAbsolute(withExt)) {
+      return withExt;
     }
-    return userOutput;
+    return path.resolve(defaultDir, withExt);
   }
-  return path.resolve(process.cwd(), "infographic-output.svg");
+
+  // 用户未指定，使用默认输出目录 + 默认文件名
+  return path.resolve(defaultDir, "infographic-output.svg");
 }

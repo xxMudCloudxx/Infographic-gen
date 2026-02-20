@@ -11,6 +11,7 @@ import {
   type ConfigKey,
 } from "../config/index.js";
 import * as log from "../utils/logger.js";
+import { t } from "../utils/i18n.js";
 
 /**
  * 注册 `config` 子命令，支持以下操作：
@@ -23,35 +24,38 @@ import * as log from "../utils/logger.js";
 export function registerConfigCommand(program: Command): void {
   const configCmd = program
     .command("config")
-    .description("管理 LLM 配置（API Key、Base URL、Provider、Model）");
+    .alias("c")
+    .description(
+      "Manage configuration (API Key, Base URL, Provider, Model, Output Directory)",
+    );
 
   // ---------- config set ----------
   configCmd
     .command("set <key> <value>")
-    .description("设置配置项")
+    .description(t("configSetDesc"))
     .action((key: string, value: string) => {
       if (!isValidConfigKey(key)) {
-        log.error(`无效的配置项 "${key}"，可选项：${CONFIG_KEYS.join(", ")}`);
+        log.error(t("configInvalidKey", { key, keys: CONFIG_KEYS.join(", ") }));
         process.exit(1);
       }
       setConfig(key, value);
-      log.success(`${CONFIG_LABELS[key]} 已设置`);
+      log.success(t("configSetSuccess", { label: CONFIG_LABELS[key] }));
     });
 
   // ---------- config get ----------
   configCmd
     .command("get <key>")
-    .description("查看单个配置项")
+    .description(t("configGetDesc"))
     .action((key: string) => {
       if (!isValidConfigKey(key)) {
-        log.error(`无效的配置项 "${key}"，可选项：${CONFIG_KEYS.join(", ")}`);
+        log.error(t("configInvalidKey", { key, keys: CONFIG_KEYS.join(", ") }));
         process.exit(1);
       }
       const val = getConfig(key);
       if (!val) {
-        log.warn(`${CONFIG_LABELS[key]} 尚未设置`);
+        log.warn(t("configNotSet", { label: CONFIG_LABELS[key] }));
       } else {
-        // 对 apiKey 做脱敏显示
+        // Mask apiKey for security
         const display = key === "apiKey" ? maskApiKey(val) : val;
         log.label(CONFIG_LABELS[key], display);
       }
@@ -60,36 +64,40 @@ export function registerConfigCommand(program: Command): void {
   // ---------- config list ----------
   configCmd
     .command("list")
-    .description("列出所有配置项")
+    .description(t("configListDesc"))
     .action(() => {
       const all = getAllConfig();
-      log.info("当前配置：");
+      log.info(t("configCurrent"));
       for (const k of CONFIG_KEYS) {
         const val = all[k];
         const display =
-          k === "apiKey" && val ? maskApiKey(val) : val || "(未设置)";
+          k === "apiKey" && val
+            ? maskApiKey(val)
+            : val || t("configNotSetValue");
         log.label(CONFIG_LABELS[k], display);
       }
-      log.dim(`  配置文件位置: ${getConfigPath()}`);
+      log.dim(t("configFileLocation", { path: getConfigPath() }));
     });
 
   // ---------- config delete ----------
   configCmd
     .command("delete <key>")
-    .description("删除配置项（恢复默认值）")
+    .description(t("configDeleteDesc"))
     .action((key: string) => {
       if (!isValidConfigKey(key)) {
-        log.error(`无效的配置项 "${key}"，可选项：${CONFIG_KEYS.join(", ")}`);
+        log.error(t("configInvalidKey", { key, keys: CONFIG_KEYS.join(", ") }));
         process.exit(1);
       }
       deleteConfig(key as ConfigKey);
-      log.success(`${CONFIG_LABELS[key as ConfigKey]} 已重置为默认值`);
+      log.success(
+        t("configResetSuccess", { label: CONFIG_LABELS[key as ConfigKey] }),
+      );
     });
 
   // ---------- config path ----------
   configCmd
     .command("path")
-    .description("显示配置文件路径")
+    .description(t("configPathDesc"))
     .action(() => {
       console.log(getConfigPath());
     });

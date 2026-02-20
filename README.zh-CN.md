@@ -12,6 +12,9 @@
 - **AI 驱动生成** — 支持 OpenAI、DeepSeek 或其他兼容 OpenAI SDK 的 LLM 服务
 - **专业模板库** — 60+ 预设设计的 AntV Infographic 模板（列表、流程、层级、对比、图表、关系等）
 - **自动纠错** — 生成失败时自动重试并反馈错误信息（最多 3 次尝试）
+- **DSL 导出** — 可选的 `--dsl` 参数保存原始语法，用于调试和微调
+- **错误自动转储** — 渲染失败时自动保存有问题的 DSL 到 `error-dump.txt`
+- **多语言支持** — CLI 输出支持英文/中文切换（默认英文）
 - **本地配置存储** — API Key 和设置永久保存，无需重复输入
 - **上游自动同步** — 每周自动检测 @antv/infographic 更新，通过 GitHub Actions 创建 PR
 - **全面的测试覆盖** — 131 个综合测试，覆盖所有功能
@@ -47,44 +50,100 @@ npm start  # 运行构建后的 CLI
 
 ## 🚀 快速开始
 
-### 1. 配置 LLM 服务
+### 命令别名
+
+为了方便使用，CLI 提供了多个快捷别名：
 
 ```bash
-infographic-gen config set apiKey sk-xxxx123
-infographic-gen config set baseUrl https://api.openai.com/v1    # 可选
-infographic-gen config set modelName gpt-4o                      # 可选
+infographic-gen   # 完整命令
+info-gen          # 短别名
+ig-gen            # 最短别名（推荐）
+```
+
+下面的所有示例均使用 `ig-gen`（可替换为任何上述别名）。
+
+### 1. 配置 LLM 服务和语言
+
+```bash
+ig-gen config set apiKey sk-xxxx123
+ig-gen config set baseUrl https://api.openai.com/v1    # 可选
+ig-gen config set modelName gpt-4o                      # 可选
+ig-gen config set defaultOutputDir ~/my-infographics    # 可选
+ig-gen config set locale zh-CN                          # 可选：切换界面语言为中文
 ```
 
 **支持的服务提供商：**
+
 - **OpenAI** ← 默认
 - **DeepSeek** — 设置 `baseUrl` 为 `https://api.deepseek.com`
 - **阿里云 DashScope** — 设置对应的端点
 - 任何兼容 OpenAI API 的服务
 
 查看配置：
+
 ```bash
-infographic-gen config list
-infographic-gen config path  # 显示配置文件位置
+ig-gen config list
+ig-gen config path  # 显示配置文件位置
 ```
 
 ### 2. 生成信息图
 
 ```bash
-infographic-gen generate "对比前端框架的优缺点"
+# generate 是默认命令，所以这些都是等效的：
+ig-gen "对比前端框架的优缺点"
+ig-gen generate "对比前端框架的优缺点"
+ig-gen g "对比前端框架的优缺点"          # 使用 g 别名
 ```
 
-输出：`infographic-output.svg`（当前目录）
+输出：`infographic-output.svg`（在默认输出目录或当前目录）
 
 指定输出路径：
+
 ```bash
-infographic-gen gen "数据可视化趋势分析" --output my-chart.svg
+ig-gen "数据可视化趋势分析" --output my-chart.svg
 ```
 
-### 3. 获取帮助
+### 3. 保存 DSL 语法（可选）
+
+`--dsl` 选项允许你将 AI 生成的原始 DSL 语法保存到文本文件。适用于：
+
+- **调试** — 检查 LLM 生成的内容，排查渲染失败原因
+- **微调** — 手动编辑 DSL 以调整信息图细节
+- **学习** — 了解 DSL 语法，为未来手动创建做准备
 
 ```bash
-infographic-gen --help
-infographic-gen config --help
+# 同时生成 SVG 和保存 DSL 语法
+ig-gen "对比 React 和 Vue" -o frameworks.svg --dsl frameworks.txt
+
+# 该命令会创建：
+# - frameworks.svg   (渲染后的信息图)
+# - frameworks.txt   (原始 DSL 语法)
+```
+
+**错误自动保存：**  
+如果经过 3 次自我修正后渲染仍然失败，有问题的 DSL 会自动保存到 `error-dump.txt` 以便调试。
+
+### 4. 切换界面语言
+
+默认情况下，CLI 输出为英文。如需切换为中文：
+
+```bash
+# 切换为中文
+ig-gen config set locale zh-CN
+
+# 切换回英文
+ig-gen config set locale en
+
+# 查看当前语言设置
+ig-gen config get locale
+```
+
+### 5. 获取帮助
+
+```bash
+ig-gen --help
+ig-gen config --help
+ig-gen --version
 infographic-gen generate --help
 infographic-gen gen -h  # gen 是 generate 的别名
 ```
@@ -96,7 +155,7 @@ infographic-gen gen -h  # gen 是 generate 的别名
 ### 示例 1：技术演进时间线
 
 ```bash
-infographic-gen gen "展示 Web 技术演进：从 HTTP/1.0 到 HTTP/3"
+ig-gen "展示 Web 技术演进：从 HTTP/1.0 到 HTTP/3"
 ```
 
 自动生成时间线，展示关键里程碑。
@@ -104,7 +163,7 @@ infographic-gen gen "展示 Web 技术演进：从 HTTP/1.0 到 HTTP/3"
 ### 示例 2：对比矩阵
 
 ```bash
-infographic-gen gen "对比单体架构和微服务架构的优缺点"
+ig-gen "对比单体架构和微服务架构的优缺点"
 ```
 
 生成包含优势和劣势的对比信息图。
@@ -112,10 +171,23 @@ infographic-gen gen "对比单体架构和微服务架构的优缺点"
 ### 示例 3：数据图表
 
 ```bash
-infographic-gen gen "编程语言使用分布：Python 35%、JavaScript 28%、Java 20%、C++ 12%、其他 5%"
+ig-gen "编程语言使用分布：Python 35%、JavaScript 28%、Java 20%、C++ 12%、其他 5%"
 ```
 
 自动创建饼图或柱状图。
+
+### 示例 4：导出 DSL 用于调试
+
+```bash
+ig-gen "对比 React、Vue 和 Angular 的优缺点" -o frameworks.svg --dsl frameworks-dsl.txt
+```
+
+该命令会生成：
+
+- `frameworks.svg` — 渲染后的信息图
+- `frameworks-dsl.txt` — 原始 DSL 语法
+
+你可以检查或手动编辑 DSL 文件来微调输出结果。如果渲染失败，可以检查 `error-dump.txt` 中的问题语法。
 
 ---
 
@@ -131,15 +203,15 @@ npm install
 
 ### 常用命令
 
-| 命令 | 说明 |
-|------|------|
-| `npm run build` | 构建 CLI 到 `dist/index.js` |
-| `npm run dev` | Watch 模式（文件变化自动重建） |
-| `npm start` | 运行已构建的 CLI |
-| `npm test` | 运行全部测试 (vitest) |
-| `npm run test:watch` | Watch 模式测试 |
-| `npm run sync` | 检查并更新上游 @antv/infographic |
-| `npm run sync:check` | 仅检测，不更新（干运行） |
+| 命令                 | 说明                             |
+| -------------------- | -------------------------------- |
+| `npm run build`      | 构建 CLI 到 `dist/index.js`      |
+| `npm run dev`        | Watch 模式（文件变化自动重建）   |
+| `npm start`          | 运行已构建的 CLI                 |
+| `npm test`           | 运行全部测试 (vitest)            |
+| `npm run test:watch` | Watch 模式测试                   |
+| `npm run sync`       | 检查并更新上游 @antv/infographic |
+| `npm run sync:check` | 仅检测，不更新（干运行）         |
 
 ### 项目结构
 
@@ -177,36 +249,43 @@ infographic-gen/
 ## 📋 配置管理
 
 配置文件存储位置：
+
 - **macOS/Linux** — `~/.config/infographic-gen/config.json`
 - **Windows** — `%APPDATA%\infographic-gen\config.json`
 
 ### 可配置的字段
 
-| 字段 | 类型 | 示例 | 说明 |
-|------|------|------|------|
-| `apiKey` | string | `sk-...` | LLM API 密钥 |
-| `baseUrl` | string | `https://api.openai.com/v1` | LLM 服务端点（可选） |
-| `modelName` | string | `gpt-4o` | 使用的模型（可选，默认 gpt-4o） |
-| `provider` | string | `openai` | 服务提供商标识 |
+| 字段               | 类型   | 示例                        | 说明                               |
+| ------------------ | ------ | --------------------------- | ---------------------------------- |
+| `apiKey`           | string | `sk-...`                    | LLM API 密钥                       |
+| `baseUrl`          | string | `https://api.openai.com/v1` | LLM 服务端点（可选）               |
+| `modelName`        | string | `gpt-4o`                    | 使用的模型（可选，默认 gpt-4o）    |
+| `defaultOutputDir` | string | `~/infographics` 或 `.`     | 默认输出目录（可选，默认当前目录） |
+| `locale`           | string | `en` 或 `zh-CN`             | CLI 界面语言（可选，默认 `en`）    |
 
 ### 通过 CLI 管理配置
 
 ```bash
 # 设置
-infographic-gen config set apiKey sk-...
-infographic-gen config set baseUrl https://api.deepseek.com
+ig-gen config set apiKey sk-...
+ig-gen config set baseUrl https://api.deepseek.com
+ig-gen config set defaultOutputDir ~/my-infographics
+ig-gen config set locale zh-CN    # 切换界面语言为中文
 
 # 读取
-infographic-gen config get apiKey
+ig-gen config get apiKey
+ig-gen config get locale          # 查看当前语言设置
+ig-gen c get defaultOutputDir     # 使用 c 别名
 
 # 列出所有配置
-infographic-gen config list
+ig-gen config list
+ig-gen c list                     # 使用 c 别名
 
 # 删除
-infographic-gen config delete baseUrl
+ig-gen config delete baseUrl
 
 # 显示配置文件路径
-infographic-gen config path
+ig-gen config path
 ```
 
 ---
@@ -247,6 +326,7 @@ npm run sync
 推送 git tag 后，GitHub Actions 会自动发布到 npm：
 
 1. **创建版本 tag**（遵循语义化版本）：
+
    ```bash
    npm version patch    # 1.0.0 → 1.0.1 (bug 修复)
    npm version minor    # 1.0.0 → 1.1.0 (新功能)
@@ -296,6 +376,7 @@ npm publish        # 需要先运行 npm login
 ```
 
 发布时：
+
 - 仅包含 `dist/` 文件夹（通过 `"files"` 字段）
 - 创建全局 `infographic-gen` 命令
 - 仅支持 ESM，需要 Node.js 18+
@@ -307,13 +388,15 @@ npm publish        # 需要先运行 npm login
 已配置两个自动化工作流：
 
 ### 1. `sync-upstream.yml` — 上游变更检测
+
 - 每周运行（周一 08:00 UTC）
 - 检测 `@antv/infographic` 版本更新
 - 检查 SKILL.md 变更
 - 有变更时自动创建 PR
 
 ### 2. `publish.yml` — 发布到 npm
-- 当推送 git tag 时触发（格式：v*.*.*)
+
+- 当推送 git tag 时触发（格式：v*.*.\*)
 - 自动构建和测试
 - 发布到 npm
 - 创建 GitHub Release
@@ -330,6 +413,7 @@ npm run test:watch    # Watch 模式
 ```
 
 测试覆盖：
+
 - **131 个测试**分布在 7 个测试文件
 - 配置管理（持久化存储）
 - 日志和加载动画工具
@@ -413,7 +497,7 @@ LLM 可能建议了你的 @antv/infographic 版本中不存在的模板。尝试
 ---
 
 更多信息请查看：
+
 - [README.md](README.md) — 英文版本
 - [PUBLISHING.md](PUBLISHING.md) — 详细发布指南
 - [QUICK_START.md](QUICK_START.md) — 快速参考卡片
-
