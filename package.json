@@ -27,7 +27,9 @@
     "deepseek"
   ],
   "bin": {
-    "infographic-gen": "./dist/index.js"
+    "infographic-gen": "./dist/index.js",
+    "info-gen": "./dist/index.js",
+    "ig-gen": "./dist/index.js"
   },
   "files": [
     "dist"
