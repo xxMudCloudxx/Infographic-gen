@@ -1,0 +1,61 @@
+{
+  "name": "infographic-gen",
+  "version": "1.0.0",
+  "description": "AI-powered CLI tool to generate AntV Infographic SVGs from natural language prompts",
+  "license": "MIT",
+  "author": "Your Name <your.email@example.com>",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/infographic-gen.git"
+  },
+  "homepage": "https://github.com/yourusername/infographic-gen#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/infographic-gen/issues"
+  },
+  "keywords": [
+    "infographic",
+    "cli",
+    "ai",
+    "llm",
+    "visualization",
+    "antv",
+    "svg",
+    "data-viz",
+    "charts",
+    "openai",
+    "deepseek"
+  ],
+  "bin": {
+    "infographic-gen": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "sync:check": "node scripts/sync-upstream.mjs --check-only",
+    "sync": "node scripts/sync-upstream.mjs"
+  },
+  "dependencies": {
+    "@antv/infographic": "^0.2.14",
+    "commander": "^13.1.0",
+    "conf": "^13.1.0",
+    "openai": "^4.85.4",
+    "ora": "^8.2.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.3",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

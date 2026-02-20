@@ -1,0 +1,9 @@
+node_modules
+dist
+.skill
+
+QUICK_START.md
+PUBLISHING.md
+
+# sync script artifacts
+.upstream-sync-summary.md
