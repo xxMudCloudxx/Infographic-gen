@@ -1,8 +1,15 @@
 import { Command } from "commander";
 import { registerConfigCommand } from "./commands/config.js";
 import { registerGenerateCommand } from "./commands/generate.js";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 
-const VERSION = "1.0.0";
+// 从 package.json 中读取版本号
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const packageJsonPath = join(__dirname, "../package.json");
+const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+const VERSION = packageJson.version;
 
 const program = new Command();
 
