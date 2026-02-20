@@ -1,0 +1,66 @@
+name: Sync Upstream Infographic
+
+on:
+  schedule:
+    # 每周一 UTC 08:00（北京时间 16:00）
+    - cron: "0 8 * * 1"
+  workflow_dispatch: # 支持手动触发
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run sync check
+        id: sync
+        run: node scripts/sync-upstream.mjs
+        # 脚本会自动将 has_changes / summary 写入 GITHUB_OUTPUT
+        # 如果有变更会更新 package.json、快照文件，并生成摘要
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install updated dependencies
+        if: steps.changes.outputs.has_changes == 'true'
+        run: npm install
+
+      - name: Build & Test
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          npm run build
+          npm test
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/sync-upstream-infographic
+          delete-branch: true
+          title: "chore(deps): sync @antv/infographic upstream changes"
+          body-path: .upstream-sync-summary.md
+          labels: |
+            dependencies
+            automated
+          commit-message: "chore(deps): sync @antv/infographic upstream changes"
+          committer: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
