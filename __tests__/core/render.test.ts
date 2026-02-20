@@ -41,9 +41,9 @@ import {
 
 describe("core/render", () => {
   describe("resolveOutputPath()", () => {
-    it("未指定时应返回 infographic-output.svg", () => {
+    it("未指定时应返回 infographic-YYYYMMDD-HHMMSS.svg 格式", () => {
       const result = resolveOutputPath();
-      expect(result).toMatch(/infographic-output\.svg$/);
+      expect(result).toMatch(/infographic-\d{8}-\d{6}\.svg$/);
     });
 
     it("未指定时应返回绝对路径", () => {
@@ -83,7 +83,7 @@ describe("core/render", () => {
 
     it("空字符串应视为未指定", () => {
       const result = resolveOutputPath("");
-      expect(result).toMatch(/infographic-output\.svg$/);
+      expect(result).toMatch(/infographic-\d{8}-\d{6}\.svg$/);
     });
   });
 

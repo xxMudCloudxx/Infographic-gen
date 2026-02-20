@@ -65,12 +65,6 @@ describe("core/prompts", () => {
       expect(INFOGRAPHIC_CREATOR_SYSTEM_PROMPT).toContain("relations");
     });
 
-    it("应包含主题/风格说明", () => {
-      expect(INFOGRAPHIC_CREATOR_SYSTEM_PROMPT).toContain("palette");
-      expect(INFOGRAPHIC_CREATOR_SYSTEM_PROMPT).toContain("rough");
-      expect(INFOGRAPHIC_CREATOR_SYSTEM_PROMPT).toContain("stylize");
-    });
-
     it("应包含只输出 DSL 的约束", () => {
       expect(INFOGRAPHIC_CREATOR_SYSTEM_PROMPT).toContain("只输出纯 DSL 语法");
     });

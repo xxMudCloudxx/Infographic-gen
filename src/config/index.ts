@@ -55,6 +55,10 @@ const DEFAULTS: ConfigSchema = {
 
 /**
  * 基于 conf 的本地持久化配置管理器（单例）
+ *
+ * conf 默认将配置存储在系统标准目录（如 Windows 的 %APPDATA%/infographic-gen-nodejs/Config/），
+ * 该路径不包含版本号，因此升级 npm 包版本不会影响已有配置。
+ * defaults 仅在对应 key 不存在时生效，不会覆盖用户已设置的值。
  */
 const store = new Conf<ConfigSchema>({
   projectName: "infographic-gen",

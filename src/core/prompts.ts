@@ -61,22 +61,6 @@ theme dark
     - #F6BD16
     - #F08BB4
 \`\`\`
-
-• 使用 \`theme.base.text.font-family\` 指定字体，如手写风格 \`851tegakizatsu\`
-• 使用 \`theme.stylize\` 选择内置风格并传参。常见风格：
-  - \`rough\`：手绘效果
-  - \`pattern\`：图案填充
-  - \`linear-gradient\` / \`radial-gradient\`：线性/径向渐变
-
-例如：手绘风格（rough）
-\`\`\`
-infographic list-row-simple-horizontal-arrow
-theme
-  stylize rough
-  base
-    text
-      font-family 851tegakizatsu
-\`\`\`
 `.trim();
 
 // ─── 数据语法示例 ───────────────────────────────────────────────────

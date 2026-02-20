@@ -4,6 +4,19 @@ import { renderToString } from "@antv/infographic/ssr";
 import { getConfig } from "../config/index.js";
 
 /**
+ * 生成带时间戳的默认文件名。
+ * 格式：infographic-YYYYMMDD-HHMMSS.svg
+ * 例如：infographic-20231024-153022.svg
+ */
+function generateDefaultFilename(): string {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const date = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+  const time = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  return `infographic-${date}-${time}.svg`;
+}
+
+/**
  * 渲染结果
  */
 export interface RenderResult {
@@ -71,7 +84,8 @@ export async function writeDSLFile(
 
 /**
  * 根据用户输入的输出路径，补全默认值。
- * 支持配置默认输出目录，如果用户未指定，默认为 defaultOutputDir 下的 infographic-output.svg。
+ * 支持配置默认输出目录，如果用户未指定，默认为 defaultOutputDir 下的
+ * infographic-YYYYMMDD-HHMMSS.svg（使用当前时间戳）。
  *
  * @param userOutput 用户指定的输出路径（可选）
  * @returns 完整的输出路径（绝对路径或相对路径）
@@ -93,6 +107,6 @@ export function resolveOutputPath(userOutput?: string): string {
     return path.resolve(defaultDir, withExt);
   }
 
-  // 用户未指定，使用默认输出目录 + 默认文件名
-  return path.resolve(defaultDir, "infographic-output.svg");
+  // 用户未指定，使用默认输出目录 + 时间戳文件名
+  return path.resolve(defaultDir, generateDefaultFilename());
 }

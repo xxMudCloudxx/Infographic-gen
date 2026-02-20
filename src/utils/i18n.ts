@@ -33,7 +33,7 @@ const translations = {
       "Generate an SVG infographic from natural language (default command)",
     generatePromptArg: "Describe the infographic you want to create",
     generateOutputOpt:
-      "Output SVG file path (default: infographic-output.svg in default output directory)",
+      "Output SVG file path (default: infographic-YYYYMMDD-HHMMSS.svg in default output directory)",
     generateDslOpt:
       "Save raw DSL syntax to a text file (optional, for debugging or fine-tuning)",
     outputTarget: "Output target: {path}",
@@ -93,7 +93,7 @@ const translations = {
     generateDesc: "根据自然语言描述生成 SVG 信息图（默认命令）",
     generatePromptArg: "描述你想要生成的信息图内容",
     generateOutputOpt:
-      "输出 SVG 文件路径（默认：默认输出目录中的 infographic-output.svg）",
+      "输出 SVG 文件路径（默认：默认输出目录中的 infographic-YYYYMMDD-HHMMSS.svg）",
     generateDslOpt: "将原始 DSL 语法保存到指定文本文件（可选，用于调试或微调）",
     outputTarget: "目标输出：{path}",
     callingAI: "正在调用 AI 生成信息图语法...",

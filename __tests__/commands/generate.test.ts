@@ -33,7 +33,9 @@ vi.mock("../../src/core/ai.js", () => ({
 vi.mock("../../src/core/render.js", () => ({
   renderDSLToSVG: vi.fn(),
   writeSVGFile: vi.fn(),
-  resolveOutputPath: vi.fn((p?: string) => p || "infographic-output.svg"),
+  resolveOutputPath: vi.fn(
+    (p?: string) => p || "infographic-20260220-120000.svg",
+  ),
 }));
 
 vi.mock("../../src/utils/logger.js", () => ({

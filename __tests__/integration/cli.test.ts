@@ -86,7 +86,11 @@ describe("CLI 集成测试", () => {
 
       // delete（恢复默认）
       const delResult = runCLI(["config", "delete", "provider"]);
-      expect(delResult.stderr).toContain("reset to default");
+      // 兼容 en / zh-CN 两种 locale
+      expect(
+        delResult.stderr.includes("reset to default") ||
+          delResult.stderr.includes("已重置为默认值"),
+      ).toBe(true);
 
       // 验证恢复
       const afterDel = runCLI(["config", "get", "provider"]);
@@ -98,7 +102,11 @@ describe("CLI 集成测试", () => {
     it("set 非法 key 应退出码非 0", () => {
       const result = runCLI(["config", "set", "invalidKey", "value"]);
       expect(result.exitCode).not.toBe(0);
-      expect(result.stderr).toContain("Invalid config key");
+      // 兼容 en / zh-CN 两种 locale
+      expect(
+        result.stderr.includes("Invalid config key") ||
+          result.stderr.includes("无效的配置项"),
+      ).toBe(true);
     });
 
     it("get 非法 key 应退出码非 0", () => {
