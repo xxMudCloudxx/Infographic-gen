@@ -4,6 +4,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock config
 vi.mock("../../src/config/index.js", () => ({
+  getConfig: vi.fn((key: string) => {
+    const config: Record<string, string> = {
+      apiKey: "test-api-key",
+      baseUrl: "https://api.test.com/v1",
+      provider: "openai",
+      modelName: "gpt-4o-test",
+      locale: "zh-CN",
+      defaultOutputDir: ".",
+    };
+    return config[key] || "";
+  }),
   getLLMConfig: vi.fn(() => ({
     apiKey: "test-api-key",
     baseUrl: "https://api.test.com/v1",

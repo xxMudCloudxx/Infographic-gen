@@ -78,7 +78,7 @@ describe("CLI 集成测试", () => {
         "provider",
         "test-provider-e2e",
       ]);
-      expect(setResult.stderr).toContain("已设置");
+      expect(setResult.stderr).toContain("set successfully");
 
       // get
       const getResult = runCLI(["config", "get", "provider"]);
@@ -86,7 +86,7 @@ describe("CLI 集成测试", () => {
 
       // delete（恢复默认）
       const delResult = runCLI(["config", "delete", "provider"]);
-      expect(delResult.stderr).toContain("已重置为默认值");
+      expect(delResult.stderr).toContain("reset to default");
 
       // 验证恢复
       const afterDel = runCLI(["config", "get", "provider"]);
@@ -98,7 +98,7 @@ describe("CLI 集成测试", () => {
     it("set 非法 key 应退出码非 0", () => {
       const result = runCLI(["config", "set", "invalidKey", "value"]);
       expect(result.exitCode).not.toBe(0);
-      expect(result.stderr).toContain("无效的配置项");
+      expect(result.stderr).toContain("Invalid config key");
     });
 
     it("get 非法 key 应退出码非 0", () => {

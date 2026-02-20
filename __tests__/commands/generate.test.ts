@@ -4,6 +4,26 @@ import { registerGenerateCommand } from "../../src/commands/generate.js";
 
 // ─── Mock 所有外部依赖 ──────────────────────────────────────────────
 
+vi.mock("../../src/config/index.js", () => ({
+  getConfig: vi.fn((key: string) => {
+    const config: Record<string, string> = {
+      apiKey: "test-api-key",
+      baseUrl: "https://api.test.com/v1",
+      provider: "openai",
+      modelName: "gpt-4o-test",
+      locale: "zh-CN",
+      defaultOutputDir: ".",
+    };
+    return config[key] || "";
+  }),
+  getLLMConfig: vi.fn(() => ({
+    apiKey: "test-api-key",
+    baseUrl: "https://api.test.com/v1",
+    provider: "openai",
+    modelName: "gpt-4o-test",
+  })),
+}));
+
 vi.mock("../../src/core/ai.js", () => ({
   generateInfographicDSL: vi.fn(),
   retryWithCorrection: vi.fn(),
@@ -65,9 +85,9 @@ describe("commands/generate", () => {
       expect(cmd).toBeDefined();
     });
 
-    it("generate 命令应有 gen 别名", () => {
+    it("generate 命令应有 g 别名", () => {
       const cmd = program.commands.find((c) => c.name() === "generate");
-      expect(cmd?.aliases()).toContain("gen");
+      expect(cmd?.aliases()).toContain("g");
     });
 
     it("应有 -o/--output 选项", () => {
@@ -102,19 +122,12 @@ describe("commands/generate", () => {
       expect(log.success).toHaveBeenCalled();
     });
 
-    it("使用别名 gen 也应正常工作", async () => {
+    it("使用别名 g 也应正常工作", async () => {
       vi.mocked(generateInfographicDSL).mockResolvedValue("infographic test");
       vi.mocked(renderDSLToSVG).mockResolvedValue("<svg>ok</svg>");
       vi.mocked(writeSVGFile).mockResolvedValue();
 
-      await program.parseAsync([
-        "node",
-        "test",
-        "gen",
-        "测试",
-        "-o",
-        "test.svg",
-      ]);
+      await program.parseAsync(["node", "test", "g", "测试", "-o", "test.svg"]);
 
       expect(generateInfographicDSL).toHaveBeenCalledWith("测试");
     });

@@ -3,6 +3,27 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 
+// Mock config
+vi.mock("../../src/config/index.js", () => ({
+  getConfig: vi.fn((key: string) => {
+    const config: Record<string, string> = {
+      apiKey: "test-api-key",
+      baseUrl: "https://api.test.com/v1",
+      provider: "openai",
+      modelName: "gpt-4o-test",
+      locale: "en",
+      defaultOutputDir: ".",
+    };
+    return config[key] || "";
+  }),
+  getLLMConfig: vi.fn(() => ({
+    apiKey: "test-api-key",
+    baseUrl: "https://api.test.com/v1",
+    provider: "openai",
+    modelName: "gpt-4o-test",
+  })),
+}));
+
 // Mock @antv/infographic/ssr — vi.hoisted 保证变量在 vi.mock 工厂之前初始化
 const { mockRenderToString } = vi.hoisted(() => {
   const mockRenderToString = vi.fn();
@@ -30,30 +51,34 @@ describe("core/render", () => {
       expect(path.isAbsolute(result)).toBe(true);
     });
 
-    it("指定 .svg 文件时应原样返回", () => {
+    it("指定 .svg 文件时应返回绝对路径", () => {
       const result = resolveOutputPath("output.svg");
-      expect(result).toBe("output.svg");
+      expect(path.isAbsolute(result)).toBe(true);
+      expect(result).toMatch(/output\.svg$/);
     });
 
     it("不带 .svg 扩展名时应自动补全", () => {
       const result = resolveOutputPath("my-chart");
-      expect(result).toBe("my-chart.svg");
+      expect(path.isAbsolute(result)).toBe(true);
+      expect(result).toMatch(/my-chart\.svg$/);
     });
 
     it("已有 .svg 扩展名时不应重复添加", () => {
       const result = resolveOutputPath("result.svg");
-      expect(result).toBe("result.svg");
-      expect(result).not.toBe("result.svg.svg");
+      expect(result).toMatch(/result\.svg$/);
+      expect(result).not.toMatch(/result\.svg\.svg$/);
     });
 
     it("支持带目录的路径", () => {
       const result = resolveOutputPath("output/charts/my-chart");
-      expect(result).toBe("output/charts/my-chart.svg");
+      expect(path.isAbsolute(result)).toBe(true);
+      expect(result).toMatch(/output[/\\]charts[/\\]my-chart\.svg$/);
     });
 
     it("支持带目录的 .svg 路径", () => {
       const result = resolveOutputPath("output/charts/my-chart.svg");
-      expect(result).toBe("output/charts/my-chart.svg");
+      expect(path.isAbsolute(result)).toBe(true);
+      expect(result).toMatch(/output[/\\]charts[/\\]my-chart\.svg$/);
     });
 
     it("空字符串应视为未指定", () => {

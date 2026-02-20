@@ -31,15 +31,17 @@ describe("config/index", () => {
   });
 
   describe("CONFIG_KEYS 常量", () => {
-    it("应包含 4 个配置项", () => {
-      expect(CONFIG_KEYS).toHaveLength(4);
+    it("应包含 6 个配置项", () => {
+      expect(CONFIG_KEYS).toHaveLength(6);
     });
 
-    it("应包含 apiKey, baseUrl, provider, modelName", () => {
+    it("应包含 apiKey, baseUrl, provider, modelName, defaultOutputDir, locale", () => {
       expect(CONFIG_KEYS).toContain("apiKey");
       expect(CONFIG_KEYS).toContain("baseUrl");
       expect(CONFIG_KEYS).toContain("provider");
       expect(CONFIG_KEYS).toContain("modelName");
+      expect(CONFIG_KEYS).toContain("defaultOutputDir");
+      expect(CONFIG_KEYS).toContain("locale");
     });
   });
 
@@ -143,7 +145,7 @@ describe("config/index", () => {
       const all = getAllConfig();
       expect(all.apiKey).toBe("all-test-key");
       expect(all.provider).toBe("azure");
-      expect(Object.keys(all)).toHaveLength(4);
+      expect(Object.keys(all)).toHaveLength(6);
     });
   });
 
