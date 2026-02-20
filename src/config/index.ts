@@ -20,6 +20,7 @@ interface ConfigSchema {
   modelName: string;
   defaultOutputDir: string;
   locale: string;
+  maxFileChars: string;
 }
 
 /** 所有可配置的 key */
@@ -30,6 +31,7 @@ export const CONFIG_KEYS = [
   "modelName",
   "defaultOutputDir",
   "locale",
+  "maxFileChars",
 ] as const;
 export type ConfigKey = (typeof CONFIG_KEYS)[number];
 
@@ -41,6 +43,7 @@ export const CONFIG_LABELS: Record<ConfigKey, string> = {
   modelName: "Model Name",
   defaultOutputDir: "Default Output Directory",
   locale: "Language",
+  maxFileChars: "Max File Content Characters",
 };
 
 /** 默认值 */
@@ -51,6 +54,7 @@ const DEFAULTS: ConfigSchema = {
   modelName: "gpt-4o",
   defaultOutputDir: ".",
   locale: "en",
+  maxFileChars: "30000",
 };
 
 /**
@@ -99,6 +103,7 @@ export function getAllConfig(): Record<ConfigKey, string> {
     modelName: getConfig("modelName"),
     defaultOutputDir: getConfig("defaultOutputDir"),
     locale: getConfig("locale"),
+    maxFileChars: getConfig("maxFileChars"),
   };
 }
 

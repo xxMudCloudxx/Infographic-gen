@@ -68,6 +68,26 @@ const translations = {
     llmEmptyContent: "LLM returned empty content",
     failedAfterRetries:
       "Failed to generate renderable infographic after {retries} retries. Last error: {error}",
+
+    // File reader
+    unsupportedFileFormat:
+      "Unsupported file format: {ext}. Currently supported: {supported}",
+    fileNotFound: "File not found: {path}",
+    fileTooLarge: "File too large ({size} MB). Maximum allowed size is 10 MB.",
+    parsingFile: "Parsing local file: {path}...",
+    fileParsed: "File parsed successfully!",
+    fileContentTruncated:
+      "Warning: file content is too long and has been auto-truncated. Some information may be lost.",
+    generateFileOpt:
+      "Provide a local file (.md, .txt, .pdf, .docx) as additional context",
+    generateFromDslOpt:
+      "Render SVG directly from a DSL text file (skips AI generation)",
+    readingDslFile: "Reading DSL file: {path}...",
+    dslFileReadSuccess: "DSL file loaded!",
+    dslFileNotFound: "DSL file not found: {path}",
+    dslFileReadFailed: "Failed to read DSL file",
+    fromDslNoPromptNeeded:
+      "Using --from-dsl mode: rendering directly from DSL file, no prompt needed.",
   },
   "zh-CN": {
     // Main program
@@ -124,6 +144,23 @@ const translations = {
     llmEmptyContent: "LLM 返回了空内容",
     failedAfterRetries:
       "已重试 {retries} 次仍然无法生成可渲染的信息图。最后一次错误：{error}",
+
+    // File reader
+    unsupportedFileFormat: "暂不支持 {ext} 格式的文件，目前支持：{supported}",
+    fileNotFound: "文件未找到：{path}",
+    fileTooLarge: "文件过大（{size} MB），最大允许 10 MB。",
+    parsingFile: "正在解析本地文件：{path}...",
+    fileParsed: "文件解析成功！",
+    fileContentTruncated:
+      "警告：文件内容过长，已自动截断，可能会丢失部分信息。",
+    generateFileOpt: "提供本地文件（.md, .txt, .pdf, .docx）作为额外上下文",
+    generateFromDslOpt: "直接从 DSL 文本文件渲染 SVG（跳过 AI 生成）",
+    readingDslFile: "正在读取 DSL 文件：{path}...",
+    dslFileReadSuccess: "DSL 文件加载成功！",
+    dslFileNotFound: "DSL 文件未找到：{path}",
+    dslFileReadFailed: "读取 DSL 文件失败",
+    fromDslNoPromptNeeded:
+      "使用 --from-dsl 模式：直接从 DSL 文件渲染，无需提示词。",
   },
 } as const;
 

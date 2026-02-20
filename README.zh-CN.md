@@ -12,6 +12,8 @@
 - **AI 驱动生成** — 支持 OpenAI、DeepSeek 或其他兼容 OpenAI SDK 的 LLM 服务
 - **专业模板库** — 60+ 预设设计的 AntV Infographic 模板（列表、流程、层级、对比、图表、关系等）
 - **自动纠错** — 生成失败时自动重试并反馈错误信息（最多 3 次尝试）
+- **文件上下文** — 读取 `.md`、`.docx`、`.pdf` 文件作为 AI 参考资料，实现一键总结可视化
+- **DSL 直接渲染** — 通过 `--from-dsl` 从已保存的 DSL 文本文件直接渲染 SVG（跳过 AI）
 - **DSL 导出** — 可选的 `--dsl` 参数保存原始语法，用于调试和微调
 - **错误自动转储** — 渲染失败时自动保存有问题的 DSL 到 `error-dump.txt`
 - **多语言支持** — CLI 输出支持英文/中文切换（默认英文）
@@ -123,7 +125,50 @@ ig-gen "对比 React 和 Vue" -o frameworks.svg --dsl frameworks.txt
 **错误自动保存：**  
 如果经过 3 次自我修正后渲染仍然失败，有问题的 DSL 会自动保存到 `error-dump.txt` 以便调试。
 
-### 4. 切换界面语言
+### 4. 使用本地文件作为上下文
+
+可以通过 `-f` 参数传入本地文件（`.md`、`.docx`、`.pdf`），AI 会读取文件内容并以此为参考资料生成信息图：
+
+```bash
+# 把 Markdown 报告总结成时间轴信息图
+ig-gen "把报告核心里程碑总结成时间轴" -f ./2024-report.md -o timeline.svg
+
+# 把 Word 文档可视化为对比图
+ig-gen "提取主要优缺点" -f analysis.docx -o comparison.svg
+
+# 从 PDF 研究报告生成信息图
+ig-gen "将研究发现总结为列表信息图" -f paper.pdf -o findings.svg
+```
+
+**支持的文件格式：**
+
+| 格式    | 依赖库      | 说明                             |
+| ------- | ----------- | -------------------------------- |
+| `.md`   | 内置 `fs`   | 同时支持 `.txt`、`.csv`、`.json` |
+| `.docx` | `mammoth`   | 提取纯文本                       |
+| `.pdf`  | `pdf-parse` | 提取文本内容                     |
+
+> **注意：** 超大文件会自动截断以适应模型的上下文窗口。可通过 `ig-gen config set maxFileChars 50000` 配置最大字符数。
+
+### 5. 从 DSL 文件直接渲染
+
+如果你之前通过 `--dsl` 保存过 DSL 文件（或从 `error-dump.txt` 获得），可以直接渲染而不需要调用 AI：
+
+```bash
+# 渲染之前保存的 DSL 文件
+ig-gen --from-dsl frameworks.txt -o frameworks.svg
+
+# 修改 error-dump.txt 后重新渲染
+ig-gen --from-dsl error-dump.txt -o fixed.svg
+```
+
+适用于：
+
+- **离线渲染** — 无需 API Key
+- **手动编辑** — 微调 DSL 语法后立即重新渲染
+- **调试** — 修正 `error-dump.txt` 中的问题语法并重新渲染
+
+### 6. 切换界面语言
 
 默认情况下，CLI 输出为英文。如需切换为中文：
 
@@ -138,7 +183,7 @@ ig-gen config set locale en
 ig-gen config get locale
 ```
 
-### 5. 获取帮助
+### 7. 获取帮助
 
 ```bash
 ig-gen --help
@@ -222,7 +267,9 @@ infographic-gen/
 │   ├── config/index.ts             # 配置存储（conf 库）
 │   ├── utils/
 │   │   ├── logger.ts               # 彩色日志输出
-│   │   └── spinner.ts              # 加载动画
+│   │   ├── spinner.ts              # 加载动画
+│   │   ├── i18n.ts                 # 国际化（en/zh-CN）
+│   │   └── file-reader.ts          # 文件文本提取（md/docx/pdf）
 │   └── core/
 │       ├── prompts.ts              # 系统提示词（60+ 模板）
 │       ├── ai.ts                   # OpenAI 集成 + 自动纠错
@@ -262,6 +309,7 @@ infographic-gen/
 | `modelName`        | string | `gpt-4o`                    | 使用的模型（可选，默认 gpt-4o）    |
 | `defaultOutputDir` | string | `~/infographics` 或 `.`     | 默认输出目录（可选，默认当前目录） |
 | `locale`           | string | `en` 或 `zh-CN`             | CLI 界面语言（可选，默认 `en`）    |
+| `maxFileChars`     | string | `30000`                     | 文件上下文最大字符数（可选）       |
 
 ### 通过 CLI 管理配置
 

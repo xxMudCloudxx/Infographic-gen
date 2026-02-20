@@ -38,6 +38,17 @@ vi.mock("../../src/core/render.js", () => ({
   ),
 }));
 
+vi.mock("../../src/utils/file-reader.js", () => ({
+  extractTextFromFile: vi.fn(),
+}));
+
+// Mock node:fs/promises 用于 --from-dsl 模式
+vi.mock("node:fs/promises", () => ({
+  default: {
+    readFile: vi.fn(),
+  },
+}));
+
 vi.mock("../../src/utils/logger.js", () => ({
   info: vi.fn(),
   success: vi.fn(),
@@ -61,6 +72,8 @@ import {
   retryWithCorrection,
 } from "../../src/core/ai.js";
 import { renderDSLToSVG, writeSVGFile } from "../../src/core/render.js";
+import { extractTextFromFile } from "../../src/utils/file-reader.js";
+import fs from "node:fs/promises";
 import * as log from "../../src/utils/logger.js";
 import * as spinner from "../../src/utils/spinner.js";
 
@@ -117,7 +130,10 @@ describe("commands/generate", () => {
         "out.svg",
       ]);
 
-      expect(generateInfographicDSL).toHaveBeenCalledWith("画一个列表");
+      expect(generateInfographicDSL).toHaveBeenCalledWith(
+        "画一个列表",
+        undefined,
+      );
       expect(renderDSLToSVG).toHaveBeenCalledWith(dsl);
       expect(writeSVGFile).toHaveBeenCalledWith("out.svg", svg);
       expect(spinner.succeedSpinner).toHaveBeenCalled();
@@ -131,7 +147,7 @@ describe("commands/generate", () => {
 
       await program.parseAsync(["node", "test", "g", "测试", "-o", "test.svg"]);
 
-      expect(generateInfographicDSL).toHaveBeenCalledWith("测试");
+      expect(generateInfographicDSL).toHaveBeenCalledWith("测试", undefined);
     });
   });
 
@@ -222,6 +238,219 @@ describe("commands/generate", () => {
       ).rejects.toThrow();
 
       expect(spinner.failSpinner).toHaveBeenCalledWith("文件写入失败");
+    });
+  });
+
+  describe("文件上下文功能 (-f)", () => {
+    it("应有 -f/--file 选项", () => {
+      const cmd = program.commands.find((c) => c.name() === "generate");
+      const fileOpt = cmd?.options.find((o) => o.long === "--file");
+      expect(fileOpt).toBeDefined();
+    });
+
+    it("传入 -f 时应读取文件并拼接上下文", async () => {
+      const fileText = "这是一份年终总结报告";
+      vi.mocked(extractTextFromFile).mockResolvedValue({
+        text: fileText,
+        truncated: false,
+      });
+      vi.mocked(generateInfographicDSL).mockResolvedValue(
+        "infographic list-grid-badge-card\ndata\n  title Test",
+      );
+      vi.mocked(renderDSLToSVG).mockResolvedValue("<svg>ok</svg>");
+      vi.mocked(writeSVGFile).mockResolvedValue();
+
+      await program.parseAsync([
+        "node",
+        "test",
+        "generate",
+        "总结成时间轴",
+        "-f",
+        "report.md",
+        "-o",
+        "out.svg",
+      ]);
+
+      expect(extractTextFromFile).toHaveBeenCalledWith("report.md");
+      expect(generateInfographicDSL).toHaveBeenCalledWith(
+        "总结成时间轴",
+        fileText,
+      );
+      expect(spinner.succeedSpinner).toHaveBeenCalled();
+    });
+
+    it("文件截断时应输出警告", async () => {
+      vi.mocked(extractTextFromFile).mockResolvedValue({
+        text: "truncated content",
+        truncated: true,
+      });
+      vi.mocked(generateInfographicDSL).mockResolvedValue(
+        "infographic list-grid-badge-card\ndata\n  title Test",
+      );
+      vi.mocked(renderDSLToSVG).mockResolvedValue("<svg>ok</svg>");
+      vi.mocked(writeSVGFile).mockResolvedValue();
+
+      await program.parseAsync([
+        "node",
+        "test",
+        "generate",
+        "测试",
+        "-f",
+        "big.pdf",
+        "-o",
+        "out.svg",
+      ]);
+
+      expect(log.warn).toHaveBeenCalled();
+    });
+
+    it("文件读取失败时应退出", async () => {
+      vi.mocked(extractTextFromFile).mockRejectedValue(new Error("文件未找到"));
+
+      await expect(
+        program.parseAsync([
+          "node",
+          "test",
+          "generate",
+          "测试",
+          "-f",
+          "not-exist.md",
+        ]),
+      ).rejects.toThrow();
+
+      expect(log.error).toHaveBeenCalled();
+    });
+
+    it("不传 -f 时不应调用 extractTextFromFile", async () => {
+      vi.mocked(generateInfographicDSL).mockResolvedValue(
+        "infographic list-grid-badge-card\ndata\n  title Test",
+      );
+      vi.mocked(renderDSLToSVG).mockResolvedValue("<svg>ok</svg>");
+      vi.mocked(writeSVGFile).mockResolvedValue();
+
+      await program.parseAsync([
+        "node",
+        "test",
+        "generate",
+        "测试",
+        "-o",
+        "out.svg",
+      ]);
+
+      expect(extractTextFromFile).not.toHaveBeenCalled();
+      expect(generateInfographicDSL).toHaveBeenCalledWith("测试", undefined);
+    });
+  });
+
+  describe("从 DSL 文件直接渲染 (--from-dsl)", () => {
+    it("应有 --from-dsl 选项", () => {
+      const cmd = program.commands.find((c) => c.name() === "generate");
+      const fromDslOpt = cmd?.options.find((o) => o.long === "--from-dsl");
+      expect(fromDslOpt).toBeDefined();
+    });
+
+    it("应直接读取 DSL 文件并渲染，跳过 AI", async () => {
+      const dslContent = "infographic list-grid-badge-card\ndata\n  title Test";
+      vi.mocked(fs.readFile).mockResolvedValue(dslContent as any);
+      vi.mocked(renderDSLToSVG).mockResolvedValue("<svg>rendered</svg>");
+      vi.mocked(writeSVGFile).mockResolvedValue();
+
+      await program.parseAsync([
+        "node",
+        "test",
+        "generate",
+        "--from-dsl",
+        "my-syntax.txt",
+        "-o",
+        "out.svg",
+      ]);
+
+      // 不应调用 AI
+      expect(generateInfographicDSL).not.toHaveBeenCalled();
+      // 应调用渲染
+      expect(renderDSLToSVG).toHaveBeenCalledWith(dslContent);
+      expect(writeSVGFile).toHaveBeenCalledWith(
+        "out.svg",
+        "<svg>rendered</svg>",
+      );
+      expect(spinner.succeedSpinner).toHaveBeenCalled();
+    });
+
+    it("DSL 文件不存在时应退出", async () => {
+      vi.mocked(fs.readFile).mockRejectedValue(new Error("ENOENT"));
+
+      await expect(
+        program.parseAsync([
+          "node",
+          "test",
+          "generate",
+          "--from-dsl",
+          "not-exist.txt",
+        ]),
+      ).rejects.toThrow();
+
+      expect(log.error).toHaveBeenCalled();
+      expect(generateInfographicDSL).not.toHaveBeenCalled();
+    });
+
+    it("DSL 文件为空时应退出", async () => {
+      vi.mocked(fs.readFile).mockResolvedValue("   " as any);
+
+      await expect(
+        program.parseAsync([
+          "node",
+          "test",
+          "generate",
+          "--from-dsl",
+          "empty.txt",
+        ]),
+      ).rejects.toThrow();
+
+      expect(log.error).toHaveBeenCalled();
+    });
+
+    it("渲染失败时应退出", async () => {
+      vi.mocked(fs.readFile).mockResolvedValue(
+        "infographic list-grid-badge-card" as any,
+      );
+      vi.mocked(renderDSLToSVG).mockRejectedValue(
+        new Error("SSR render failed"),
+      );
+
+      await expect(
+        program.parseAsync([
+          "node",
+          "test",
+          "generate",
+          "--from-dsl",
+          "bad.txt",
+          "-o",
+          "out.svg",
+        ]),
+      ).rejects.toThrow();
+
+      expect(spinner.failSpinner).toHaveBeenCalled();
+    });
+
+    it("--from-dsl 模式不需要 prompt 参数", async () => {
+      const dslContent = "infographic list-grid-badge-card\ndata\n  title OK";
+      vi.mocked(fs.readFile).mockResolvedValue(dslContent as any);
+      vi.mocked(renderDSLToSVG).mockResolvedValue("<svg>ok</svg>");
+      vi.mocked(writeSVGFile).mockResolvedValue();
+
+      // 不传 prompt，只传 --from-dsl
+      await program.parseAsync([
+        "node",
+        "test",
+        "generate",
+        "--from-dsl",
+        "syntax.txt",
+        "-o",
+        "out.svg",
+      ]);
+
+      expect(generateInfographicDSL).not.toHaveBeenCalled();
+      expect(writeSVGFile).toHaveBeenCalled();
     });
   });
 });

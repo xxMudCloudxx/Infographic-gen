@@ -14,6 +14,8 @@ Transform your ideas into beautiful, data-driven infographics in seconds using t
 - **AI-Powered Generation** — Uses OpenAI, DeepSeek, or other LLM providers via OpenAI SDK
 - **Professional Templates** — 60+ pre-designed AntV Infographic templates (lists, sequences, hierarchies, comparisons, charts, relations, etc.)
 - **Self-Correcting** — Automatically retries with error feedback if generation fails (up to 3 attempts)
+- **File Context** — Read `.md`, `.docx`, `.pdf` files as context for AI-powered summarization and visualization
+- **Direct DSL Rendering** — Render SVG directly from a saved DSL text file with `--from-dsl` (skip AI)
 - **DSL Export** — Optional `--dsl` flag to save raw syntax for debugging and fine-tuning
 - **Error Auto-Dump** — Automatically saves problematic DSL to `error-dump.txt` when rendering fails
 - **Persistent Config** — Save API keys and settings locally for repeat use
@@ -123,7 +125,50 @@ ig-gen "Compare React vs Vue" -o frameworks.svg --dsl frameworks.txt
 **Error Auto-Dump:**  
 If rendering fails after 3 self-correction attempts, the problematic DSL is automatically saved to `error-dump.txt` for debugging.
 
-### 4. Get Help
+### 4. Use Local Files as Context
+
+You can pass a local file (`.md`, `.docx`, `.pdf`) to the AI as reference material. The AI will read the file content and use it to generate an infographic:
+
+```bash
+# Summarize a Markdown report into a timeline infographic
+ig-gen "把报告核心里程碑总结成时间轴" -f ./2024-report.md -o timeline.svg
+
+# Visualize a Word document as a comparison chart
+ig-gen "Extract key pros and cons" -f analysis.docx -o comparison.svg
+
+# Generate infographic from PDF research paper
+ig-gen "Summarize findings into a list infographic" -f paper.pdf -o findings.svg
+```
+
+**Supported file formats:**
+
+| Format  | Library       | Notes                                 |
+| ------- | ------------- | ------------------------------------- |
+| `.md`   | Built-in `fs` | Also supports `.txt`, `.csv`, `.json` |
+| `.docx` | `mammoth`     | Extracts plain text                   |
+| `.pdf`  | `pdf-parse`   | Extracts text content                 |
+
+> **Note:** Very large files are automatically truncated to stay within the model's context window. You can configure the max character limit via `ig-gen config set maxFileChars 50000`.
+
+### 5. Render from Saved DSL File
+
+If you previously saved a DSL file (via `--dsl` or from `error-dump.txt`), you can render it directly without calling the AI:
+
+```bash
+# Render a previously saved DSL file
+ig-gen --from-dsl frameworks.txt -o frameworks.svg
+
+# Re-render after manually editing the error dump
+ig-gen --from-dsl error-dump.txt -o fixed.svg
+```
+
+This is useful for:
+
+- **Offline rendering** — No API key needed
+- **Manual editing** — Fine-tune DSL syntax and re-render instantly
+- **Debugging** — Fix problematic DSL from `error-dump.txt` and re-render
+
+### 6. Get Help
 
 ```bash
 ig-gen --help
@@ -205,7 +250,9 @@ infographic-gen/
 │   ├── config/index.ts             # Config store (conf library)
 │   ├── utils/
 │   │   ├── logger.ts               # Colored output to stderr
-│   │   └── spinner.ts              # Ora spinner wrapper
+│   │   ├── spinner.ts              # Ora spinner wrapper
+│   │   ├── i18n.ts                 # Internationalization (en/zh-CN)
+│   │   └── file-reader.ts          # File text extraction (md/docx/pdf)
 │   └── core/
 │       ├── prompts.ts              # System prompts (60+ templates)
 │       ├── ai.ts                   # OpenAI integration + self-correction
@@ -248,6 +295,7 @@ Config is stored in:
 | `baseUrl`          | string | `https://api.openai.com/v1` | LLM endpoint (optional)                              |
 | `modelName`        | string | `gpt-4o`                    | Model to use (optional, defaults to gpt-4o)          |
 | `defaultOutputDir` | string | `~/infographics` or `.`     | Default output directory (optional, defaults to `.`) |
+| `maxFileChars`     | string | `30000`                     | Max characters to read from file context (optional)  |
 
 Manage config via CLI:
 

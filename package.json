@@ -1,6 +1,6 @@
 {
   "name": "infographic-gen",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "AI-powered CLI tool to generate AntV Infographic SVGs from natural language prompts",
   "license": "MIT",
   "author": "Your Name <your.email@example.com>",
@@ -47,12 +47,15 @@
     "@antv/infographic": "^0.2.14",
     "commander": "^13.1.0",
     "conf": "^13.1.0",
+    "mammoth": "^1.11.0",
     "openai": "^4.85.4",
     "ora": "^8.2.0",
+    "pdf-parse": "^2.4.5",
     "picocolors": "^1.1.1"
   },
   "devDependencies": {
     "@types/node": "^22.13.4",
+    "@types/pdf-parse": "^1.1.5",
     "tsup": "^8.4.0",
     "typescript": "^5.7.3",
     "vitest": "^4.0.18"

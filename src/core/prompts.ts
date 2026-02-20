@@ -323,13 +323,27 @@ ${FULL_EXAMPLE}
 2. **必须尊重用户输入语言**：如果用户使用中文描述需求，DSL 中所有文本内容（title、desc、label 等）也必须使用中文。
 3. **选择最合适的模板**：根据用户需求的信息结构（列表、流程、对比、层级等）选择最匹配的模板。
 4. **数据完整性**：确保生成的数据结构完整，包含 title、desc 以及与模板匹配的主数据字段。
-5. **配色和主题**：除非用户特别要求，否则使用一组美观且协调的默认配色。
+5. **配色和主题**：除非用户特别要求，否则使用默认配色。
 `.trim();
 
 /**
  * 自我修正提示词模板。
  * 当 SSR 渲染失败时，将报错信息注入后发给 LLM 进行修正。
  */
+/**
+ * 文件上下文提示词模板。
+ * 当用户通过 -f 参数传入本地文件时，将文件内容和用户指令组装为完整的 Prompt。
+ */
+export const FILE_CONTEXT_PROMPT_TEMPLATE = `
+以下是提供的参考资料：
+<context>
+{fileContent}
+</context>
+
+请根据上述资料，完成以下用户需求：
+{userPrompt}
+`.trim();
+
 export const SELF_CORRECTION_PROMPT_TEMPLATE = `
 之前你生成的 AntV Infographic DSL 语法在渲染时出错了。
 

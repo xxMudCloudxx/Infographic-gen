@@ -227,6 +227,35 @@ data
         }),
       );
     });
+
+    it("传入 fileContext 时应将文件内容拼装到 prompt 中", async () => {
+      const dsl = "infographic list-grid-badge-card\ndata\n  title Test";
+      mockCreate.mockResolvedValue({
+        choices: [{ message: { content: dsl } }],
+      });
+
+      await generateInfographicDSL("总结成时间轴", "这是文件内容");
+
+      const callArgs = mockCreate.mock.calls[0][0];
+      const userMessage = callArgs.messages.find((m: any) => m.role === "user");
+      expect(userMessage.content).toContain("这是文件内容");
+      expect(userMessage.content).toContain("总结成时间轴");
+      expect(userMessage.content).toContain("<context>");
+    });
+
+    it("不传 fileContext 时 prompt 应为纯用户输入", async () => {
+      const dsl = "infographic list-grid-badge-card\ndata\n  title Test";
+      mockCreate.mockResolvedValue({
+        choices: [{ message: { content: dsl } }],
+      });
+
+      await generateInfographicDSL("画一个列表");
+
+      const callArgs = mockCreate.mock.calls[0][0];
+      const userMessage = callArgs.messages.find((m: any) => m.role === "user");
+      expect(userMessage.content).toBe("画一个列表");
+      expect(userMessage.content).not.toContain("<context>");
+    });
   });
 
   describe("retryWithCorrection()", () => {
@@ -279,6 +308,30 @@ data
       expect(messages[2].content).toBe("infographic bad-syntax");
       expect(messages[3].role).toBe("user");
       expect(messages[3].content).toContain("RenderError: invalid template");
+    });
+
+    it("传入 fileContext 时修正请求应保留文件上下文", async () => {
+      const correctedDSL =
+        "infographic list-grid-badge-card\ndata\n  title Fixed";
+      mockCreate.mockResolvedValue({
+        choices: [{ message: { content: correctedDSL } }],
+      });
+
+      await retryWithCorrection(
+        "infographic bad-syntax",
+        "RenderError: invalid template",
+        "总结成信息图",
+        1,
+        "这是文件上下文内容",
+      );
+
+      const callArgs = mockCreate.mock.calls[0][0];
+      const messages = callArgs.messages;
+
+      // user prompt 应包含文件上下文
+      expect(messages[1].content).toContain("这是文件上下文内容");
+      expect(messages[1].content).toContain("<context>");
+      expect(messages[1].content).toContain("总结成信息图");
     });
 
     it("在最大重试边界（attempt === MAX_RETRIES）应仍可执行", async () => {

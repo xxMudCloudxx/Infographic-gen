@@ -3,6 +3,7 @@ import { getLLMConfig } from "../config/index.js";
 import {
   INFOGRAPHIC_CREATOR_SYSTEM_PROMPT,
   SELF_CORRECTION_PROMPT_TEMPLATE,
+  FILE_CONTEXT_PROMPT_TEMPLATE,
 } from "./prompts.js";
 import * as log from "../utils/logger.js";
 import { updateSpinner } from "../utils/spinner.js";
@@ -92,17 +93,26 @@ function cleanDSL(raw: string): string {
  * 3. 最多重试 MAX_RETRIES 次。
  *
  * @param userPrompt 用户输入的自然语言
+ * @param fileContext 可选的文件上下文（通过 -f 参数传入的文件内容）
  * @returns 生成的 DSL 语法
  */
 export async function generateInfographicDSL(
   userPrompt: string,
+  fileContext?: string,
 ): Promise<string> {
   const client = createClient();
   const { modelName } = getLLMConfig();
 
+  const finalPrompt = fileContext
+    ? FILE_CONTEXT_PROMPT_TEMPLATE.replace(
+        "{fileContent}",
+        fileContext,
+      ).replace("{userPrompt}", userPrompt)
+    : userPrompt;
+
   const messages: OpenAI.ChatCompletionMessageParam[] = [
     { role: "system", content: INFOGRAPHIC_CREATOR_SYSTEM_PROMPT },
-    { role: "user", content: userPrompt },
+    { role: "user", content: finalPrompt },
   ];
 
   return callLLM(client, modelName, messages);
@@ -115,6 +125,7 @@ export async function generateInfographicDSL(
  * @param errorMessage    渲染报错信息
  * @param userPrompt      用户原始需求
  * @param attempt         当前第几次重试（从 1 开始）
+ * @param fileContext     可选的文件上下文
  * @returns 修正后的 DSL
  */
 export async function retryWithCorrection(
@@ -122,6 +133,7 @@ export async function retryWithCorrection(
   errorMessage: string,
   userPrompt: string,
   attempt: number,
+  fileContext?: string,
 ): Promise<string> {
   if (attempt > MAX_RETRIES) {
     throw new Error(
@@ -150,9 +162,17 @@ export async function retryWithCorrection(
     errorMessage,
   ).replace("{syntax}", originalSyntax);
 
+  // 如果有文件上下文，在重试时也保留，让 AI 不丢失参考资料
+  const originalUserPrompt = fileContext
+    ? FILE_CONTEXT_PROMPT_TEMPLATE.replace(
+        "{fileContent}",
+        fileContext,
+      ).replace("{userPrompt}", userPrompt)
+    : userPrompt;
+
   const messages: OpenAI.ChatCompletionMessageParam[] = [
     { role: "system", content: INFOGRAPHIC_CREATOR_SYSTEM_PROMPT },
-    { role: "user", content: userPrompt },
+    { role: "user", content: originalUserPrompt },
     { role: "assistant", content: originalSyntax },
     { role: "user", content: correctionMessage },
   ];
