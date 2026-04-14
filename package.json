@@ -1,17 +1,17 @@
 {
   "name": "infographic-gen",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "AI-powered CLI tool to generate AntV Infographic SVGs from natural language prompts",
   "license": "MIT",
-  "author": "Your Name <your.email@example.com>",
+  "author": "xxMudCloudxx",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/infographic-gen.git"
+    "url": "https://github.com/xxMudCloudxx/infographic-gen.git"
   },
-  "homepage": "https://github.com/yourusername/infographic-gen#readme",
+  "homepage": "https://github.com/xxMudCloudxx/infographic-gen#readme",
   "bugs": {
-    "url": "https://github.com/yourusername/infographic-gen/issues"
+    "url": "https://github.com/xxMudCloudxx/infographic-gen/issues"
   },
   "keywords": [
     "infographic",
