@@ -44,7 +44,7 @@
     "sync": "node scripts/sync-upstream.mjs"
   },
   "dependencies": {
-    "@antv/infographic": "^0.2.14",
+    "@antv/infographic": "^0.2.20",
     "commander": "^13.1.0",
     "conf": "^13.1.0",
     "mammoth": "^1.11.0",
